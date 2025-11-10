@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Météo et Statistiques</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="../../public/assets/css/bootstrap/bootstrap.min.css">
+    <!-- Style CSS -->
+    <link rel="stylesheet" href="../../public/assets/css/style.css">
+    <style>
+        .meteo-box {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .score-sante {
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+        }
+        .graph-container {
+            height: 300px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- En-tête -->
+        <h1 class="text-center mb-4">Tableau de Bord Météo</h1>
+
+        <!-- Section Météo -->
+        <div class="meteo-box">
+            <h2 class="h4 mb-3">Données Météo Actuelles</h2>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5>Température</h5>
+                            <p class="h3" id="temperature">--°C</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5>Humidité</h5>
+                            <p class="h3" id="humidite">--%</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5>Luminosité</h5>
+                            <p class="h3" id="luminosite">-- lux</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5>Localisation</h5>
+                            <p class="h3" id="localisation">--</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Score de Santé -->
+        <div class="meteo-box">
+            <h2 class="h4 mb-3">Score de Santé Global</h2>
+            <div class="text-center">
+                <div class="score-sante" id="scoreSante">--</div>
+                <div class="progress mt-2">
+                    <div class="progress-bar" role="progressbar" id="scoreProgress" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graphiques -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Évolution des Données</h5>
+                        <div class="graph-container">
+                            <canvas id="evolutionGraph"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Comparaison des Plantes</h5>
+                        <div class="graph-container">
+                            <canvas id="comparaisonGraph"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="row mt-4">
+            <div class="col-md-12 text-center">
+                <button class="btn btn-primary me-2" onclick="genererRapport()">
+                    Exporter le Rapport
+                </button>
+                <button class="btn btn-secondary" onclick="actualiserDonnees()">
+                    Actualiser les Données
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../../public/assets/js/jquery/jquery-3.3.1.min.js"></script>
+    <script src="../../public/assets/js/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Fonction pour récupérer les données météo
+        function actualiserDonnees() {
+            // Simuler une requête API
+            fetch('/api/meteo/current')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('temperature').textContent = data.temperatureExt + '°C';
+                    document.getElementById('humidite').textContent = data.humiditeExt + '%';
+                    document.getElementById('luminosite').textContent = data.luminositeExt + ' lux';
+                    document.getElementById('localisation').textContent = data.localisation;
+                    updateScoreSante();
+                })
+                .catch(error => console.error('Erreur:', error));
+        }
+
+        // Fonction pour mettre à jour le score de santé
+        function updateScoreSante() {
+            fetch('/api/statistiques/sante')
+                .then(response => response.json())
+                .then(data => {
+                    const score = data.scoreSante;
+                    document.getElementById('scoreSante').textContent = score + '%';
+                    document.getElementById('scoreProgress').style.width = score + '%';
+                    document.getElementById('scoreProgress').className = 
+                        `progress-bar ${score > 75 ? 'bg-success' : score > 50 ? 'bg-warning' : 'bg-danger'}`;
+                })
+                .catch(error => console.error('Erreur:', error));
+        }
+
+        // Fonction pour générer le rapport
+        function genererRapport() {
+            alert('Génération du rapport en cours...');
+            // Implémentation de l'export
+        }
+
+        // Initialisation des graphiques
+        function initGraphiques() {
+            // Graphique d'évolution
+            const ctxEvolution = document.getElementById('evolutionGraph').getContext('2d');
+            new Chart(ctxEvolution, {
+                type: 'line',
+                data: {
+                    labels: ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'],
+                    datasets: [{
+                        label: 'Température',
+                        data: [20, 22, 21, 23, 20],
+                        borderColor: 'rgb(255, 99, 132)',
+                        fill: false
+                    }]
+                }
+            });
+
+            // Graphique de comparaison
+            const ctxComparaison = document.getElementById('comparaisonGraph').getContext('2d');
+            new Chart(ctxComparaison, {
+                type: 'bar',
+                data: {
+                    labels: ['Plante 1', 'Plante 2', 'Plante 3'],
+                    datasets: [{
+                        label: 'Score de Santé',
+                        data: [85, 75, 90],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.5)',
+                            'rgba(255, 206, 86, 0.5)',
+                            'rgba(54, 162, 235, 0.5)'
+                        ]
+                    }]
+                }
+            });
+        }
+
+        // Initialisation de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            actualiserDonnees();
+            initGraphiques();
+            // Actualisation automatique toutes les 5 minutes
+            setInterval(actualiserDonnees, 300000);
+        });
+    </script>
+</body>
+</html>
